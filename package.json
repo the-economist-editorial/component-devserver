@@ -1,0 +1,37 @@
+{
+  "name": "@economist/component-devserver",
+  "version": "1.0.0",
+  "description": "Component DevServer for coding in a frontend environment",
+  "author": "The Economist Editorial (https://economist.com)",
+  "license": "LicenseRef-LICENSE",
+  "repository": "git://github.com/the-economist-editorial/component-devserver",
+  "homepage": "http://the-economist-editorial.github.io/component-devserver",
+  "bugs": "http://github.com/the-economist-editorial/component-devserver/issues",
+  "main": "index.js",
+  "bin": {
+    "component-devserver": "./component-devserver"
+  },
+  "eslintConfig": {
+    "extends": "strict/es5"
+  },
+  "scripts": {
+    "test": "npm run lint",
+    "lint": "eslint . component-devserver"
+  },
+  "dependencies": {
+    "babel": "^5.5.8",
+    "babelify": "^6.1.2",
+    "browser-sync": "^2.7.7",
+    "browserify": "^10.2.4",
+    "cssnext": "^1.6.0",
+    "handlebars": "^3.0.3",
+    "highlight.js": "^8.6.0",
+    "react": "^0.13.3"
+  },
+  "devDependencies": {
+    "eslint": "^0.23.0",
+    "eslint-config-strict": "^2.0.0",
+    "eslint-plugin-filenames": "^0.1.1",
+    "eslint-plugin-one-variable-per-var": "^0.0.3"
+  }
+}
