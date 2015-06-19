@@ -26,6 +26,7 @@
     "cssnext": "^1.6.0",
     "handlebars": "^3.0.3",
     "highlight.js": "^8.6.0",
+    "postcss-nesting": "^0.1.0",
     "react": "^0.13.3"
   },
   "devDependencies": {

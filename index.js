@@ -2,7 +2,7 @@ var fs = require('fs');
 var path = require('path');
 var url = require('url');
 var browserSync = require('browser-sync');
-var cssnext = require('cssnext');
+var postcss = require('postcss');
 var browserify = require('browserify');
 var babelify = require('babelify');
 var React = require('react');
@@ -37,11 +37,13 @@ function serveCSS(server) {
       var file = server.getFile(request.url);
       if (file) {
         response.setHeader('Content-Type', 'text/css');
-        return response.end(cssnext(fs.readFileSync(file, 'utf8'), {
-          from: file,
-          compress: true,
-          sourcemap: true,
-        }));
+        return response.end(postcss()
+          .use(require('postcss-nesting')())
+          .use(require('cssnext')())
+          .process(fs.readFileSync(file, 'utf8'), {
+            from: file,
+            map: true,
+          }).css);
       }
     }
     next();
