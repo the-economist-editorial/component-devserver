@@ -10,13 +10,13 @@
   <body>
     <h1 class="component-title">
       {{name}}
-      <span>({{version}})</span>
+      <span>(v{{version}})</span>
     </h1>
+    <div id="component-preview">
+      {{{demo}}}
+    </div>
     <div class="component-panel">
       <h2 class="component-panel-heading">Documentation</h2>
-      <div id="component-preview" class="component-preview">
-        {{{demo}}}
-      </div>
       <div class="component-description">
         {{description}}
       </div>
