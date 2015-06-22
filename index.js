@@ -26,7 +26,7 @@ function handleError(server, request, response, error) {
 
 function serveIndex(server) {
   return function serveIndexMiddleware(request, response, next) {
-    if (matchPath(request, '/')) {
+    if (matchPath(request, '/') || matchPath(request, '/index.html')) {
       try {
         var json = JSON.parse(fs.readFileSync(server.getFile('package.json')));
         json.example = highlight('js', fs.readFileSync(server.getFile('example.js'), 'utf8')).value;
