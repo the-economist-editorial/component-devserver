@@ -79,13 +79,21 @@ function serveJS(server) {
       return browserify()
         .require('react')
         .bundle()
+        .on('error', handleError.bind(null, server, request, response))
+        .pipe(response);
+    } else if (matchPath(request, '/component-devserver-frontend.js')) {
+      return browserify(server.getFile('component-devserver-frontend.js'))
+        .external('react')
+        .external('example.js')
+        .bundle()
+        .on('error', handleError.bind(null, server, request, response))
         .pipe(response);
     } else if (matchPath(request, /^(?!.*node_modules\/).*\.js$/)) {
       var file = server.getFile(request.url);
       if (file) {
-        return browserify(file, { debug: true, expose: url.parse(request.url).pathname })
+        return browserify({ debug: true })
           .external('react')
-          .require(file, { expose: url.parse(request.url).pathname })
+          .require(file, { expose: url.parse(request.url).pathname.substr(1) })
           .transform(babelify.configure({ stage: 0 }))
           .bundle()
           .on('error', handleError.bind(null, server, request, response))
