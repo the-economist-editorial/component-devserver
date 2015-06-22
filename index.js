@@ -2,6 +2,7 @@ var fs = require('fs');
 var path = require('path');
 var url = require('url');
 var childProcess = require('child_process');
+var qs = require('qs');
 var browserSync = require('browser-sync');
 var postcss = require('postcss');
 var browserify = require('browserify');
@@ -43,7 +44,7 @@ function serveIndex(server) {
 
 function renderServerSideDemo(fileName) {
   var script = '' +
-    'require("babel/register");' +
+    'require("babel/register")({stage:0});' +
     'var React = require("react");' +
     'var example = require("' + fileName + '");' +
     'React.renderToStaticMarkup(example);';
@@ -75,30 +76,32 @@ function serveCSS(server) {
 
 function serveJS(server) {
   return function serveJSMiddleware(request, response, next) {
-    if (matchPath(request, '/react.js')) {
-      return browserify()
-        .require('react')
-        .bundle()
-        .on('error', handleError.bind(null, server, request, response))
-        .pipe(response);
-    } else if (matchPath(request, '/component-devserver-frontend.js')) {
-      return browserify(server.getFile('component-devserver-frontend.js'))
-        .external('react')
-        .external('example.js')
-        .bundle()
-        .on('error', handleError.bind(null, server, request, response))
-        .pipe(response);
-    } else if (matchPath(request, /^(?!.*node_modules\/).*\.js$/)) {
-      var file = server.getFile(request.url);
-      if (file) {
-        return browserify({ debug: true })
-          .external('react')
-          .require(file, { expose: url.parse(request.url).pathname.substr(1) })
-          .transform(babelify.configure({ stage: 0 }))
-          .bundle()
-          .on('error', handleError.bind(null, server, request, response))
-          .pipe(response);
+    var parsedUrl = url.parse(request.url);
+    var parsedQuery = qs.parse(parsedUrl.query);
+    var file = server.getFile(request.url);
+    var isInNodeModules = matchPath(request, /node_modules/);
+    var forceBrowserify = 'browserify' in parsedQuery;
+    var shouldBrowserify = isInNodeModules === false || forceBrowserify;
+    if (file && shouldBrowserify) {
+      var browserifyTask = browserify({ debug: ('debug' in parsedQuery) });
+      if ('expose' in parsedQuery) {
+        browserifyTask.require(file, { expose: parsedQuery.expose });
+      } else {
+        browserifyTask.add(file);
       }
+      if (parsedQuery.external && Array.isArray(parsedQuery.external) === false) {
+        parsedQuery.external = [parsedQuery.external];
+      }
+      (parsedQuery.external || []).forEach(function externaliseModule(module) {
+        browserifyTask.external(module);
+      });
+      if ('babelify' in parsedQuery) {
+        browserifyTask.transform(babelify.configure({ stage: 0 }));
+      }
+      return browserifyTask
+        .bundle()
+        .on('error', handleError.bind(null, server, request, response))
+        .pipe(response);
     }
     next();
   };
