@@ -18,14 +18,24 @@ function matchPath(request, match) {
   return match === file;
 }
 
+function handleError(server, request, response, error) {
+  server.instance.logger.error('{red:%s}', error.stack || error);
+  server.notify('Error compiling ' + request.url + ': ' + error.message);
+  response.end(error.stack || String(error));
+}
+
 function serveIndex(server) {
   return function serveIndexMiddleware(request, response, next) {
     if (matchPath(request, '/')) {
-      var json = JSON.parse(fs.readFileSync(server.getFile('package.json')));
-      json.example = highlight('js', fs.readFileSync(server.getFile('example.js'), 'utf8')).value;
-      json.demo = React.renderToStaticMarkup(require(server.getFile('example.js')));
-      var template = handlebars.compile(fs.readFileSync(server.getFile('index.html'), 'utf8'));
-      return response.end(template(json));
+      try {
+        var json = JSON.parse(fs.readFileSync(server.getFile('package.json')));
+        json.example = highlight('js', fs.readFileSync(server.getFile('example.js'), 'utf8')).value;
+        json.demo = React.renderToStaticMarkup(require(server.getFile('example.js')));
+        var template = handlebars.compile(fs.readFileSync(server.getFile('index.html'), 'utf8'));
+        return response.end(template(json));
+      } catch(error) {
+        handleError(server, request, response, error);
+      }
     }
     next();
   };
@@ -37,13 +47,17 @@ function serveCSS(server) {
       var file = server.getFile(request.url);
       if (file) {
         response.setHeader('Content-Type', 'text/css');
-        return response.end(postcss()
-          .use(require('postcss-nesting')())
-          .use(require('cssnext')())
-          .process(fs.readFileSync(file, 'utf8'), {
-            from: file,
-            map: true,
-          }).css);
+        try {
+          return response.end(postcss()
+            .use(require('postcss-nesting')())
+            .use(require('cssnext')())
+            .process(fs.readFileSync(file, 'utf8'), {
+              from: file,
+              map: true,
+            }).css);
+        } catch(error) {
+          handleError(server, request, response, error);
+        }
       }
     }
     next();
@@ -60,10 +74,12 @@ function serveJS(server) {
     } else if (matchPath(request, /^(?!.*node_modules\/).*\.js$/)) {
       var file = server.getFile(request.url);
       if (file) {
-        return browserify(file, { debug: true })
+        return browserify(file, { debug: true, expose: url.parse(request.url).pathname })
           .external('react')
+          .require(file, { expose: url.parse(request.url).pathname })
           .transform(babelify.configure({ stage: 0 }))
           .bundle()
+          .on('error', handleError.bind(null, server, request, response))
           .pipe(response);
       }
     }
