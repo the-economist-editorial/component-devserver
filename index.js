@@ -1,11 +1,11 @@
 var fs = require('fs');
 var path = require('path');
 var url = require('url');
+var childProcess = require('child_process');
 var browserSync = require('browser-sync');
 var postcss = require('postcss');
 var browserify = require('browserify');
 var babelify = require('babelify');
-var React = require('react');
 var handlebars = require('handlebars');
 var highlight = require('highlight.js').highlight;
 require('babel/register');
@@ -30,7 +30,7 @@ function serveIndex(server) {
       try {
         var json = JSON.parse(fs.readFileSync(server.getFile('package.json')));
         json.example = highlight('js', fs.readFileSync(server.getFile('example.js'), 'utf8')).value;
-        json.demo = React.renderToStaticMarkup(require(server.getFile('example.js')));
+        json.demo = renderServerSideDemo(server.getFile('example.js'));
         var template = handlebars.compile(fs.readFileSync(server.getFile('index.html'), 'utf8'));
         return response.end(template(json));
       } catch(error) {
@@ -39,6 +39,15 @@ function serveIndex(server) {
     }
     next();
   };
+}
+
+function renderServerSideDemo(fileName) {
+  var script = '' +
+    'require("babel/register");' +
+    'var React = require("react");' +
+    'var example = require("' + fileName + '");' +
+    'React.renderToStaticMarkup(example);';
+  return childProcess.execSync('node -p \'' + script + '\'');
 }
 
 function serveCSS(server) {
