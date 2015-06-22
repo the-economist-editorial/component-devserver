@@ -76,6 +76,9 @@ function serveCSS(server) {
 
 function serveJS(server) {
   return function serveJSMiddleware(request, response, next) {
+    if (!matchPath(request, /\.js$/)) {
+      return next();
+    }
     var parsedUrl = url.parse(request.url);
     var parsedQuery = qs.parse(parsedUrl.query);
     var file = server.getFile(request.url);
