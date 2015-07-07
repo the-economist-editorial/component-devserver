@@ -23,10 +23,10 @@
     "babelify": "^6.1.2",
     "browser-sync": "^2.7.7",
     "browserify": "^10.2.4",
-    "cssnext": "^1.6.0",
+    "cssnext": "^1.8.0",
     "handlebars": "^3.0.3",
     "highlight.js": "^8.6.0",
-    "postcss": "^4.1.11",
+    "postcss": "^4.1.14",
     "postcss-nesting": "^0.1.0",
     "qs": "^3.1.0",
     "react": "^0.13.3"

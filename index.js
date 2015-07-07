@@ -57,17 +57,19 @@ function serveCSS(server) {
       var file = server.getFile(request.url);
       if (file) {
         response.setHeader('Content-Type', 'text/css');
-        try {
-          return response.end(postcss()
-            .use(require('postcss-nesting')())
-            .use(require('cssnext')())
-            .process(fs.readFileSync(file, 'utf8'), {
-              from: file,
-              map: true,
-            }).css);
-        } catch(error) {
-          handleError(server, request, response, error);
-        }
+        postcss()
+          .use(require('cssnext')())
+          .use(require('postcss-nesting')())
+          .process(fs.readFileSync(file, 'utf8'), {
+            from: file,
+            map: true,
+          })
+          .then(function sendCSS(result) {
+            response.end(result.css);
+          })
+          .catch(function cssError(error) {
+            handleError(server, request, response, error);
+          });
       }
     }
     next();
