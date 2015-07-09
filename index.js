@@ -25,17 +25,32 @@ function handleError(server, request, response, error) {
   response.end(error.stack || String(error));
 }
 
-function serveIndex(server) {
+function serveHTML(server) {
   return function serveIndexMiddleware(request, response, next) {
-    if (matchPath(request, '/') || matchPath(request, '/index.html')) {
+    if (matchPath(request, '/') || matchPath(request, /\.html$/)) {
+      var html = '';
+      if (matchPath(request, '/')) {
+        html = server.getFile('index.html');
+      } else {
+        html = server.getFile(request.url);
+      }
       try {
         var json = JSON.parse(fs.readFileSync(server.getFile('package.json')));
-        json.example = highlight('js', fs.readFileSync(server.getFile('example.js'), 'utf8')).value;
-        json.demo = renderServerSideDemo(server.getFile('example.js'));
-        var template = handlebars.compile(fs.readFileSync(server.getFile('index.html'), 'utf8'));
+        var config = json['component-devserver'] || {};
+        if (!config.example) {
+          throw new Error('devserver config must include example');
+        }
+        json.example = highlight('js', fs.readFileSync(server.getFile(config.example), 'utf8')).value;
+        json.demo = renderServerSideDemo(server.getFile(config.example));
+        json.readme = '';
+        var readme = server.getFile('README.md');
+        if (readme !== path.join(__dirname, 'README.md') && fs.existsSync(readme)) {
+          json.readme = fs.readFileSync(readme);
+        }
+        var template = handlebars.compile(fs.readFileSync(html, 'utf8'));
         return response.end(template(json));
       } catch(error) {
-        handleError(server, request, response, error);
+        return handleError(server, request, response, error);
       }
     }
     next();
@@ -57,7 +72,7 @@ function serveCSS(server) {
       var file = server.getFile(request.url);
       if (file) {
         response.setHeader('Content-Type', 'text/css');
-        postcss()
+        return postcss()
           .use(require('cssnext')())
           .use(require('postcss-nesting')())
           .process(fs.readFileSync(file, 'utf8'), {
@@ -78,7 +93,7 @@ function serveCSS(server) {
 
 function serveJS(server) {
   return function serveJSMiddleware(request, response, next) {
-    if (!matchPath(request, /\.js$/)) {
+    if (!matchPath(request, /\.(?:js|es6)$/)) {
       return next();
     }
     var parsedUrl = url.parse(request.url);
@@ -132,7 +147,7 @@ module.exports = function startServer(directory) {
     server: {
         baseDir: [directory, __dirname],
     },
-    middleware: [serveIndex(server), serveCSS(server), serveJS(server)],
+    middleware: [serveHTML(server), serveCSS(server), serveJS(server)],
   });
   server.watch(path.join(__dirname, '*')).on('change', server.reload);
   server.watch(path.join(directory, '*')).on('change', server.reload);

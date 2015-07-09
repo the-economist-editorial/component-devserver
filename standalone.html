@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0">
+    {{#each component-devserver.css}}
+      {{#if this.contents}}
+        <style>{{{this.contents}}}</style>
+      {{else}}
+        <link rel="stylesheet" href="{{this}}"/>
+      {{/if}}
+    {{/each}}
+  </head>
+  <body>
+    <div id="component-preview">
+      {{{demo}}}
+    </div>
+    {{#each component-devserver.js}}
+      {{#if this.contents}}
+        <script>{{{this.contents}}}</script>
+      {{else}}
+        <script src="{{this}}"></script>
+      {{/if}}
+    {{/each}}
+    </pre>
+  </body>
+</html>

@@ -3,10 +3,15 @@
   <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0">
-    <link rel="stylesheet" href="/node_modules/mocha/mocha.css"/>
     <link rel="stylesheet" href="/node_modules/highlight.js/styles/github.css"/>
     <link rel="stylesheet" href="/component-devserver.css"/>
-    <link rel="stylesheet" href="/index.css"/>
+    {{#each component-devserver.css}}
+      {{#if this.contents}}
+        <style>{{{this.contents}}}</style>
+      {{else}}
+        <link rel="stylesheet" href="{{this}}"/>
+      {{/if}}
+    {{/each}}
   </head>
   <body>
     <h1 class="component-title">
@@ -26,28 +31,26 @@
         <pre><code>{{{example}}}</code></pre>
       </div>
     </div>
-    <div class="component-panel">
-      <h2 class="component-panel-heading">Tests</h2>
-      <div id="mocha" class="test-output"></div>
-    </div>
-    <script src="/node_modules/react/react.js?browserify&amp;expose=react"></script>
-    <script>React = require('react')</script>
-    <script src="/index.js?babelify&amp;debug&amp;expose=index.js&amp;external=react"></script>
-    <script src="/example.js?babelify&amp;debug&amp;expose=example.js&amp;external=react"></script>
-    <script src="/component-devserver-frontend.js?debug&amp;external=example.js&amp;external=react"></script>
-    <script src="/node_modules/mocha/mocha.js"></script>
-    <script src="/node_modules/@economist/component-testharness/node_modules/chai/chai.js"></script>
-    <script src="/node_modules/@economist/component-testharness/node_modules/chai-things/lib/chai-things.js"></script>
-    <script src="/node_modules/@economist/component-testharness/node_modules/chai-as-promised/lib/chai-as-promised.js"></script>
-    <script src="/node_modules/@economist/component-testharness/node_modules/chai-spies/chai-spies.js"></script>
-    <script>
-      chai.should();
-      mocha.setup('bdd');
-    </script>
-    <script src="/test/index.js?debug&amp;external=react"></script>
-    <script>
-      mocha.checkLeaks();
-      mocha.run();
-    </script>
+    {{#if readme}}
+      <div class="component-panel">
+        <h2 class="component-panel-heading">Readme</h2>
+        {{readme}}
+      </div>
+    {{/if}}
+    {{#each component-devserver.html}}
+      {{#if this.contents}}
+        {{{this.contents}}}
+      {{else}}
+        {{{this}}}
+      {{/if}}
+    {{/each}}
+    {{#each component-devserver.js}}
+      {{#if this.contents}}
+        <script>{{{this.contents}}}</script>
+      {{else}}
+        <script src="{{this}}"></script>
+      {{/if}}
+    {{/each}}
+    </pre>
   </body>
 </html>

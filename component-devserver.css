@@ -59,11 +59,11 @@ body {
 
 #mocha {
   margin: 0 !important;
-  position: relative;
-  padding: 1rem 0 0;
+  position: relative !important;
+  padding: 1rem 0 0 !important;
 }
 
 #mocha-stats {
-  position: absolute;
-  top: 0;
+  position: absolute !important;
+  top: 0 !important;
 }
